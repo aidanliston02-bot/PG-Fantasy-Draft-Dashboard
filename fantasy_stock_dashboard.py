@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import datetime
+import pytz
 
 # --- CONFIG ---
 START_TIME = datetime.datetime(2025, 8, 4, 9, 30)  # Monday 9:30am EST
@@ -27,12 +28,14 @@ st.set_page_config(page_title="Fantasy Draft Order Tracker", layout="wide")
 st.title("\U0001F3C8 Fantasy Draft Order Tracker")
 
 # Track last update time
-now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+eastern = pytz.timezone('US/Eastern')
+now_est = datetime.datetime.now(tz=eastern)
+now_formatted = now_est.strftime("%Y-%m-%d %I:%M:%S %p %Z")
 
 st.markdown(f"""
 Track your stock/crypto pick performance from **Monday 8/4 9:30am** to **Friday 8/8 4:00pm**.
 
-_Last update: **{now}**_
+_Last update: **{now_formatted}**_
 """)
 
 # Load starting data
