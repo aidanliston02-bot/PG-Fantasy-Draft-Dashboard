@@ -24,11 +24,15 @@ def get_current_price(ticker, asset_type):
             return None
 
 st.set_page_config(page_title="Fantasy Draft Order Tracker", layout="wide")
-st.title("🏈 Fantasy Draft Order Tracker")
-st.markdown("""
+st.title("\U0001F3C8 Fantasy Draft Order Tracker")
+
+# Track last update time
+now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+st.markdown(f"""
 Track your stock/crypto pick performance from **Monday 8/4 9:30am** to **Friday 8/8 4:00pm**.
 
-Data updates each time the page loads.
+_Last update: **{now}**_
 """)
 
 # Load starting data
@@ -43,18 +47,51 @@ for _, row in df.iterrows():
         results.append({
             "name": row["name"],
             "ticker": row["ticker"],
-            "start_price": row["start_price"],
-            "current_price": round(current_price, 2),
-            "pct_change": round(pct_change, 2)
+            "start_price_val": row["start_price"],
+            "start_price": f"${row['start_price']:.2f}",
+            "current_price_val": current_price,
+            "current_price": f"${current_price:.2f}",
+            "pct_change_val": pct_change,
+            "pct_change": f"{pct_change:.2f}%"
         })
 
 results_df = pd.DataFrame(results)
-results_df = results_df.sort_values(by="pct_change", ascending=False).reset_index(drop=True)
+results_df = results_df.sort_values(by="pct_change_val", ascending=False).reset_index(drop=True)
+
+# Add medals and emoji ranks
+def medal(rank):
+    return {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, str(rank))
+
 results_df["rank"] = results_df.index + 1
+results_df["rank"] = results_df["rank"].apply(medal)
+
+# Conditional styling
+def highlight_change(val):
+    if isinstance(val, str):
+        try:
+            val_num = float(val.strip('%'))
+            if val_num > 0:
+                return 'color: green; font-weight: bold'
+            elif val_num < 0:
+                return 'color: red;'
+        except:
+            pass
+    return ''
+
+def link_ticker(ticker):
+    return ticker
+
+results_df["ticker"] = results_df["ticker"].apply(link_ticker)
 
 # Leaderboard Table at the top
-st.subheader("🏆 Live Leaderboard")
-st.dataframe(results_df[["rank", "name", "ticker", "start_price", "current_price", "pct_change"]], hide_index=True, use_container_width=True)
+st.subheader("\U0001F3C6 Live Leaderboard")
+st.dataframe(
+    results_df[["rank", "name", "ticker", "start_price", "current_price", "pct_change"]]
+    .style.applymap(highlight_change, subset=["pct_change"]),
+    hide_index=True,
+    use_container_width=True
+)
+
 
 # Footer
 st.caption("Stock starting prices are taken from Yahoo finance opening price on 8/4")
